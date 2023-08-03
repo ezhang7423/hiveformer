@@ -12,3 +12,4 @@ RLBench
 
 *.lock
 .~lock.*
+*.egg-info

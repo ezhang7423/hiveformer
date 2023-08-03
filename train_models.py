@@ -92,7 +92,7 @@ def main(config):
 
     # Prepare model
     model_class = model_factory[config.MODEL.model_class]
-    model = model_class(**config.MODEL)
+    model = model_class(**config.MODEL) 
 
     LOGGER.info("Model: nweights %d nparams %d" % (model.num_parameters))
     LOGGER.info("Model: trainable nweights %d nparams %d" %
@@ -106,11 +106,11 @@ def main(config):
         model.load_state_dict(checkpoint, strict=True)
 
     model.train()
-    set_dropout(model, config.dropout)
+    set_dropout(model, config.dropout) #!!
     model = wrap_model(model, device, config.local_rank)
 
     # Prepare optimizer
-    optimizer = build_optimizer(model, config)
+    optimizer = build_optimizer(model, config) #!!
 
     LOGGER.info(f"***** Running training with {config.world_size} GPUs *****")
     LOGGER.info("  Batch size = %d", config.train_batch_size if config.local_rank == -
@@ -137,7 +137,7 @@ def main(config):
             # backward pass
             if config.gradient_accumulation_steps > 1:  # average loss
                 losses['total'] = losses['total'] / \
-                    config.gradient_accumulation_steps
+                    config.gradient_accumulation_steps #!!
             losses['total'].backward()
 
             acc = ((logits[..., -1].data.cpu() > 0.5)
@@ -159,7 +159,7 @@ def main(config):
                 global_step += 1
 
                 # learning rate scheduling
-                lr_this_step = get_lr_sched(global_step, config)
+                lr_this_step = get_lr_sched(global_step, config) #!!
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lr_this_step
                 TB_LOGGER.add_scalar('lr', lr_this_step, global_step)
@@ -170,7 +170,7 @@ def main(config):
 
                 # update model params
                 if config.grad_norm != -1:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(
+                    grad_norm = torch.nn.utils.clip_grad_norm_( #!!
                         model.parameters(), config.grad_norm
                     )
                     # print(step, name, grad_norm)
