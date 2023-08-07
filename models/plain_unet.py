@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.network_utils import (
+from hiveformer.models.network_utils import (
     ConvLayer, dense_layer, normalise_quat,
     ActionLoss
 )
@@ -107,7 +107,7 @@ class PlainUNet(nn.Module):
             nn.AdaptiveAvgPool2d(1),
             Rearrange("b c h w -> b (c h w)"),
             *dense_layer(quat_hidden_size, quat_hidden_size),
-            *dense_layer(quat_hidden_size, 3 + 4 + 1, apply_activation=False),
+            *dense_layer(quat_hidden_size, 3 + 3 + 1, apply_activation=False),
         )
 
         self.maps_to_coord = ConvLayer(

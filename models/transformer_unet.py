@@ -7,8 +7,8 @@ from einops.layers.torch import Rearrange
 import torch
 import torch.nn as nn
 
-from models.network_utils import normalise_quat
-from models.plain_unet import PlainUNet
+from hiveformer.models.network_utils import normalise_quat
+from hiveformer.models.plain_unet import PlainUNet
 
 
 class TransformerUNet(PlainUNet):
@@ -62,9 +62,9 @@ class TransformerUNet(PlainUNet):
     @property
     def quat_hidden_size(self):
         if self.quat_input == 'add':
-            return self.hidden_size * 3  # 3 cameras
+            return self.hidden_size * self.num_cams  # self.num_cams cameras
         elif self.quat_input == 'concat':
-            return self.hidden_size * 3 * 2
+            return self.hidden_size * self.num_cams * 2
         else:
             raise NotImplementedError(
                 'unsupport quat_input %s' % self.quat_input)
@@ -202,7 +202,7 @@ class TransformerUNet(PlainUNet):
                 xt_heatmap, 'b t (n c h w) -> b t n c h w',
                 t=nsteps, n=num_cams, c=1, h=im_height, w=im_width
             )
-            xt = einops.reduce(pc_obs * xt_heatmap,
+            xt = einops.reduce(pc_obs[:, :, :1] * xt_heatmap[:, :, :1],
                                'b t n c h w -> b t c', 'sum')
 
         else:
@@ -219,8 +219,8 @@ class TransformerUNet(PlainUNet):
         xg = self.quat_decoder(xg)
         xg = einops.rearrange(xg, '(b t) c -> b t c', t=nsteps)
         xt_offset = xg[..., :3]
-        xr = normalise_quat(xg[..., 3:7])
-        xo = xg[..., 7].unsqueeze(-1)
+        xr = xg[..., 3:6]
+        xo = xg[..., 6].unsqueeze(-1)
 
         actions = torch.cat([xt + xt_offset, xr, xo], dim=-1)
 

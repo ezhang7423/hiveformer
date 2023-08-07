@@ -66,8 +66,8 @@ def normalise_quat(x):
 class ActionLoss(object):
     def decompose_actions(self, actions):
         pos = actions[..., :3]
-        rot = actions[..., 3:7]
-        open = actions[..., 7]
+        rot = actions[..., 3:6]
+        open = actions[..., 6]
         return pos, rot, open
 
     def compute_loss(self, preds, targets, masks=None) -> Dict[str, torch.Tensor]:
@@ -78,7 +78,7 @@ class ActionLoss(object):
 
         # Automatically matching the closest quaternions (symmetrical solution).
         tgt_rot_ = -tgt_rot.clone()
-        
+        tgt_open.clamp_(0)
         if masks is None:
             losses['pos'] = F.mse_loss(pred_pos, tgt_pos)
     
